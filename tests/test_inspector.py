@@ -2,18 +2,15 @@
 
 from __future__ import annotations
 
-from nwbinspector import Importance, inspect_nwbfile
+import pytest
+from nwbinspector import inspect_nwbfile
 
-# check name -> why it is left (README, "NWB Inspector report")
-DOCUMENTED_EXCEPTIONS = {
-    "check_subject_age": "The dataset reports neither age nor date of birth; not guessed.",
-}
+from nolan_lab_to_nwb.inspection import DOCUMENTED_EXCEPTIONS, unexplained_messages
 
 
 def test_no_unexplained_issues(converted_fixture):
     _, path = converted_fixture
-    messages = list(inspect_nwbfile(nwbfile_path=path, importance_threshold=Importance.BEST_PRACTICE_VIOLATION))
-    unexplained = [m for m in messages if m.check_function_name not in DOCUMENTED_EXCEPTIONS]
+    _, unexplained = unexplained_messages(path)
     assert not unexplained, "\n".join(f"{m.importance.name} {m.check_function_name}: {m.message}" for m in unexplained)
 
 
@@ -22,3 +19,14 @@ def test_documented_exceptions_still_apply(converted_fixture):
     _, path = converted_fixture
     fired = {m.check_function_name for m in inspect_nwbfile(nwbfile_path=path)}
     assert set(DOCUMENTED_EXCEPTIONS) <= fired
+
+
+def test_gate_exits_nonzero_on_unexplained_issue(tmp_path, converted_fixture, monkeypatch):
+    """The CI gate must fail when a new issue appears (here: the documented one, un-documented)."""
+    from nolan_lab_to_nwb import inspection
+
+    _, path = converted_fixture
+    monkeypatch.setattr(inspection, "DOCUMENTED_EXCEPTIONS", {})
+    with pytest.raises(SystemExit) as exit_info:
+        inspection.main([str(path)])
+    assert exit_info.value.code == 1

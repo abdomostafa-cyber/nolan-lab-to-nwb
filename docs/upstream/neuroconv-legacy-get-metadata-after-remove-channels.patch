@@ -1,0 +1,29 @@
+diff --git a/src/neuroconv/datainterfaces/ecephys/openephys/openephyslegacydatainterface.py b/src/neuroconv/datainterfaces/ecephys/openephys/openephyslegacydatainterface.py
+index 73dfaa8..c2daa09 100644
+--- a/src/neuroconv/datainterfaces/ecephys/openephys/openephyslegacydatainterface.py
++++ b/src/neuroconv/datainterfaces/ecephys/openephys/openephyslegacydatainterface.py
+@@ -134,7 +134,9 @@ class OpenEphysLegacyRecordingInterface(BaseRecordingExtractorInterface):
+             # pipeline synthesizes its defaults from the channel-group properties.
+             metadata["Ecephys"]["ElectricalSeries"][self.metadata_key]["name"] = "ElectricalSeries"
+ 
+-        neo_reader = self.recording_extractor.neo_reader
++        # Read from the extractor as constructed: ``remove_channels`` (and any other slice) replaces
++        # ``recording_extractor`` with a wrapper that has no ``neo_reader``.
++        neo_reader = self._extractor_instance.neo_reader
+         block_annotations = neo_reader.raw_annotations.get("blocks", [])
+         if block_annotations:
+             segment_annotations = block_annotations[0].get("segments", [])
+diff --git a/tests/test_on_data/ecephys/test_openephyslegacy.py b/tests/test_on_data/ecephys/test_openephyslegacy.py
+index 228d93d..4d9bd6a 100644
+--- a/tests/test_on_data/ecephys/test_openephyslegacy.py
++++ b/tests/test_on_data/ecephys/test_openephyslegacy.py
+@@ -49,3 +49,9 @@ class TestOpenEphysLegacyConversions(TestCase):
+ 
+         assert "session_start_time" in metadata["NWBFile"]
+         self.assertEqual(metadata["NWBFile"]["session_start_time"], datetime(2020, 4, 29, 0, 0))
++
++    def test_openephyslegacy_get_metadata_after_remove_channels(self):
++        expected_metadata = self.interface.get_metadata()
++        self.interface.remove_channels(channel_ids=[self.interface.channel_ids[-1]])
++        metadata = self.interface.get_metadata()
++        assert metadata["NWBFile"]["session_start_time"] == expected_metadata["NWBFile"]["session_start_time"]

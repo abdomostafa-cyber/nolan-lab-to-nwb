@@ -1,0 +1,65 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: tests (${{ matrix.os }}, Python ${{ matrix.python-version }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python-version: ["3.11", "3.13"]
+    steps:
+      # Actions pinned to release commit SHAs (tag in the comment).
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+
+      - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7  # v10.2.0
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install the locked environment
+        run: uv sync --locked
+
+      # The full-session tests skip themselves: data/ is not in the repository.
+      - name: Tests (fixtures)
+        run: uv run pytest
+
+      - name: Convert both fixtures
+        shell: bash
+        run: |
+          mkdir -p ci-output
+          for window in pulse end; do
+            uv run nolan-lab-to-nwb-convert --data-dir tests/fixtures/$window --output ci-output/fixture_$window.nwb
+          done
+
+      # The nwbinspector CLI exits 0 even on CRITICAL findings; this gate exits 1 on anything
+      # at BEST_PRACTICE_VIOLATION or above that is not documented in nolan_lab_to_nwb/inspection.py.
+      - name: NWB Inspector gate
+        shell: bash
+        run: uv run python -m nolan_lab_to_nwb.inspection ci-output/fixture_pulse.nwb ci-output/fixture_end.nwb
+
+      - name: NWB Inspector full report
+        if: always()
+        shell: bash
+        run: |
+          uv run nwbinspector ci-output --threshold BEST_PRACTICE_SUGGESTION --progress-bar False \
+            --report-file-path ci-output/inspector_report.txt --overwrite
+
+      - name: Mutation check
+        if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.13'
+        run: uv run python scripts/mutation_check.py
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9  # v7.0.2
+        if: always() && matrix.os == 'ubuntu-latest' && matrix.python-version == '3.13'
+        with:
+          name: inspector-report
+          path: ci-output/inspector_report.txt

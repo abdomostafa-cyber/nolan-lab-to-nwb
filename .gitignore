@@ -19,3 +19,8 @@ dist/
 .idea/
 .DS_Store
 Thumbs.db
+
+# CI / local outputs
+ci-output/
+.upstream/
+notes/

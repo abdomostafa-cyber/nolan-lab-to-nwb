@@ -5,6 +5,29 @@ something wrong: what happened, how it was caught, and the fix. Newest entries a
 
 Entry format: **What went wrong**, **How it was caught**, **Fix**, **Lesson**.
 
+### At a glance: errors and how they were caught
+
+| # | What went wrong | Whose | Caught by |
+|---|---|---|---|
+| 1 | Datasets titled "raw" were processed `.mat` exports | dataset metadata | listing actual files via the Zenodo API |
+| 2 | Pinned NeuroConv + SpikeInterface set unresolvable on Python 3.14 | agent | uv's lockfile resolution across all supported Pythons |
+| 3 | `settings.xml` parser read the wrong `<CHANNEL>` elements | agent | printing parsed values against the real file |
+| 4 | AUX described as an accelerometer; it is pinned at int16 max | agent (assumption) | per-channel summary from the independent reader |
+| 5 | Last record zero-padded (992 samples) | file format | `min=0` on channels that sit near −4 V |
+| 6 | Channel IDs (`'1'`) used where names (`ADC1`) were needed | agent | assertion on the first stub conversion |
+| 7 | Setting `unit` silently disables NeuroConv's scaling | NeuroConv | reading the writer's source before relying on it |
+| 8 | `get_metadata()` crashes after slicing the recording | NeuroConv bug | first stub conversion; confirmed on upstream data |
+| 9 | Workaround for #8 broke on a second `run_conversion` | agent | idempotency test |
+| 10 | Test expected 150 ms; real pulses are 150.07–150.10 ms | agent (test) | the test failing on real data |
+| 11 | Deprecated `Device.manufacturer` that the Inspector doesn't flag | agent / pynwb | DeprecationWarning in test output, now an error |
+| 12 | Inspector CLI exits 0 on CRITICAL findings | NWB Inspector | checking the exit code before writing CI |
+| 13 | Bad reproducer (incomplete metadata) almost reported a false bug | agent | reading where the exception was raised |
+| 14 | Patch silently not applied (CRLF) | agent / Windows | the "patched" repro still failing |
+
+Plus smaller ones in the entries below: version drift on Zenodo, a broken remote-zip reader,
+Windows path handling, a stalled interpreter download, `.gitattributes` rewriting fixtures, and
+false alarms from a wheel-coverage script.
+
 ---
 
 ## 2026-10-26: Milestone 1, choosing the dataset
@@ -335,3 +358,64 @@ settings (no credentials are handled here). The local folder name is unchanged.
   drive description cites the published wire spec as lab practice, "not confirmed for this
   animal". 56 pulses in 2219.76 s (median interval 41 s, range 20–58 s) fits the published
   20–60 s.
+
+---
+
+## 2026-10-27: Milestone 5, upstream check before drafting anything
+
+The user asked to be certain the NeuroConv `neo_reader` crash was not our own mistake before any
+upstream text was written. What was done:
+
+- **Separated our usage from the bug.** The way I first hit it (replacing `recording_extractor`
+  with a frame slice) is ours and not a documented use. So the reproducer uses only public API:
+  construct `OpenEphysLegacyRecordingInterface`, `get_metadata()`, `remove_channels()`,
+  `get_metadata()`. It imports no project code (`.upstream/repro.py`).
+- **Ruled out our data.** Downloaded NeuroConv's own test sample, `OpenEphys_SampleData_1` from
+  GIN `NeuralEnsemble/ephy_testing_data` (7 files, 1.83 MB, with the user's OK). It reproduces
+  there.
+- **Ruled out a fixed-on-main bug.** Reproduced on NeuroConv `main` (2a46c7e, 0.11.0.dev0, in a
+  separate venv under `.upstream/`) as well as 0.10.2. `run_conversion()` with no metadata
+  crashes the same way. Passing metadata fetched *before* `remove_channels` avoids it.
+- **Checked the fix like a reviewer would.** The one-line change (`self._extractor_instance.neo_reader`)
+  plus a regression test. The new test **fails on the unpatched source** and passes with the fix.
+  NeuroConv's own legacy tests went from 17 passed / 1 skipped to 18 / 1. All repros pass on
+  the patched `main`.
+- **Output:** `docs/upstream/neuroconv-issue-draft.md` and the `.patch`. Not posted. The other
+  two rough edges (date-only start time; Inspector CLI exit code) are recorded there as
+  discussion notes, not bugs, with the reasons.
+
+### Mistakes made during the check (caught before they reached the draft)
+- **Wrong reproducer.** My first `run_conversion` repro passed a hand-written metadata dict
+  without an `Ecephys` section. It failed with an unrelated `AssertionError` (`metadata['Ecephys']
+  dictionary does not contain key 'ElectricalSeries'`). Quoting it would have reported a
+  bug that does not exist. Caught by reading where the exception was raised; the repro was
+  rewritten to test the two realistic call patterns.
+- **Patch silently not applied.** The clone has CRLF line endings (`core.autocrlf=true`), so my
+  exact-match edit raised and the next test run was still on unpatched code. Caught because
+  the "patched" repro still reproduced the bug. Re-applied with line-ending-aware matching
+  and confirmed with `git diff` before testing.
+- **Over-cautious claim in the draft.** I first wrote that Axona and Neuralynx are "possibly"
+  affected. Checking `main` showed both read `neo_reader` in helpers called from `get_metadata`,
+  so the draft now says so plainly. It also says the other interfaces were not run.
+- **Environment friction (Windows).** A 260-character path limit in the scratchpad broke both
+  the clone and the venv, and Anaconda's `cygpath` maps `/c/` to the Anaconda folder. Fixed by
+  using `core.longpaths` for the clone only and a short `.upstream/` folder (gitignored).
+
+### CI and DANDI: what the tools do on failure
+- **The NWB Inspector CLI always exits 0.** With a CRITICAL finding present, `nwbinspector file.nwb`
+  returned exit code 0; `_nwbinspector_cli` has no exit-code handling at all. A CI step that only
+  ran it would always pass. Caught by checking `$?` before writing the workflow, not by assuming.
+  **Fix:** `python -m nolan_lab_to_nwb.inspection` exits 1 on any finding at
+  BEST_PRACTICE_VIOLATION or above that isn't documented. A test checks that it does fail
+  (`test_gate_exits_nonzero_on_unexplained_issue`).
+- **Agent error: my wheel-coverage check raised 12 false alarms.** A quick script reported missing
+  CI wheels for numpy, deno, cffi, cryptography and wcwidth. Every flag was wrong: numpy is
+  resolved separately for Python 3.11; deno ships `py3-none` wheels my pattern ignored; the other
+  three are Linux-only and come only with the optional `upload` extra. Caught by reading the
+  lockfile markers (`uv export`) instead of acting on the script.
+- **DANDI rejects the missing age.** `dandi validate` rates `check_subject_age` as an **ERROR**,
+  and `dandi upload` requires validation by default. Checked locally, with no account involved,
+  before writing `docs/dandi_sandbox.md`. The guide says so up front and doesn't suggest
+  putting a guessed age in the file.
+- **Not yet verified:** the workflow has only been run step by step on Windows / Python 3.11. It
+  has not run on GitHub (Ubuntu, 3.13) because nothing is pushed yet.
