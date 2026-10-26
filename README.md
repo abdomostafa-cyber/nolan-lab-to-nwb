@@ -137,10 +137,11 @@ No test compares the NWB file with NeuroConv's own reading of the data:
 
 Drafts only; nothing has been posted. See [docs/upstream/](docs/upstream/).
 
-- **NeuroConv (bug):** `OpenEphysLegacyRecordingInterface.get_metadata()` raises `AttributeError`
-  after the interface's own `remove_channels()`. Reproduced with public API calls on NeuroConv's
-  own test data, on `main` and 0.10.2. A one-line fix plus a regression test, which fails
-  without the fix, is in [the patch](docs/upstream/neuroconv-legacy-get-metadata-after-remove-channels.patch).
+- **NeuroConv (bug):** `get_metadata()` and `run_conversion()` raise `AttributeError` after the
+  interface's own `remove_channels()`, in `AxonRecordingInterface` and
+  `OpenEphysLegacyRecordingInterface`. Reproduced with public API calls on NeuroConv's own test data,
+  on `main` and 0.10.2. A one-line fix per interface, plus regression tests that fail without
+  it, is in [the patch](docs/upstream/neuroconv-get-metadata-after-remove-channels.patch).
 - **NeuroConv (design question):** a legacy header time like `95534` is reduced to the date,
   even though `settings.xml` holds the full time.
 - **NWB Inspector (question):** the CLI exit code doesn't reflect findings.

@@ -419,3 +419,20 @@ upstream text was written. What was done:
   putting a guessed age in the file.
 - **Not yet verified:** the workflow has only been run step by step on Windows / Python 3.11. It
   has not run on GitHub (Ubuntu, 3.13) because nothing is pushed yet.
+
+### Axon check before posting (user's request)
+- Downloaded NeuroConv's Axon test files from GIN with the user's OK: `axon/File_axon_1.abf` (3.83 MB)
+  and `axon/extracellular_data/four_electrodes/24606005_SampleData.abf` (178 kB, Dougherty Lab
+  ventral roots).
+- **Why the second file:** `File_axon_1.abf` has a single channel. Removing it leaves a
+  zero-channel recording, a degenerate case a reviewer could fairly dismiss. The four-channel file
+  lets the repro keep 3 channels, the realistic case. That's the workflow a maintainer suggested in
+  neuroconv#2137 the day before.
+- **Result:** `AxonRecordingInterface.get_metadata()` and `run_conversion()` both raise the same
+  `AttributeError` after `remove_channels()`, on `main` and 0.10.2.
+- **Fix checked the same way as before:** the new Axon test fails on unpatched source and passes
+  with the fix. The selected NeuroConv tests go from 29 passed / 15 skipped to 31 / 15, with the same
+  skip reasons before and after (their own markers: zarr 3, plugin loading). The difference is
+  exactly the two new tests.
+- The draft issue now covers both interfaces and is shorter. It still lists the other six
+  interfaces as **not tested**.
