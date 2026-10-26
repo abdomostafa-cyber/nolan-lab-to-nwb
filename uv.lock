@@ -3,10 +3,10 @@ revision = 5
 requires-python = ">=3.11, <3.14"
 resolution-markers = [
     "python_full_version >= '3.13' and sys_platform == 'win32'",
-    "python_full_version == '3.12.*' and sys_platform == 'win32'",
     "python_full_version >= '3.13' and sys_platform == 'emscripten'",
-    "python_full_version == '3.12.*' and sys_platform == 'emscripten'",
     "python_full_version >= '3.13' and sys_platform != 'emscripten' and sys_platform != 'win32'",
+    "python_full_version == '3.12.*' and sys_platform == 'win32'",
+    "python_full_version == '3.12.*' and sys_platform == 'emscripten'",
     "python_full_version == '3.12.*' and sys_platform != 'emscripten' and sys_platform != 'win32'",
     "python_full_version < '3.12' and sys_platform == 'win32'",
     "python_full_version < '3.12' and sys_platform == 'emscripten'",
@@ -524,10 +524,10 @@ version = "3.0.0"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
     "python_full_version >= '3.13' and sys_platform == 'win32'",
-    "python_full_version == '3.12.*' and sys_platform == 'win32'",
     "python_full_version >= '3.13' and sys_platform == 'emscripten'",
-    "python_full_version == '3.12.*' and sys_platform == 'emscripten'",
     "python_full_version >= '3.13' and sys_platform != 'emscripten' and sys_platform != 'win32'",
+    "python_full_version == '3.12.*' and sys_platform == 'win32'",
+    "python_full_version == '3.12.*' and sys_platform == 'emscripten'",
     "python_full_version == '3.12.*' and sys_platform != 'emscripten' and sys_platform != 'win32'",
 ]
 dependencies = [
@@ -1216,6 +1216,50 @@ openephys = [
 ]
 
 [[package]]
+name = "nolan-lab-to-nwb"
+version = "0.1.0"
+source = { editable = "." }
+dependencies = [
+    { name = "hdmf" },
+    { name = "neo" },
+    { name = "neuroconv", extra = ["openephys"] },
+    { name = "probeinterface" },
+    { name = "pynwb" },
+    { name = "pyyaml" },
+    { name = "spikeinterface" },
+]
+
+[package.optional-dependencies]
+upload = [
+    { name = "dandi" },
+]
+
+[package.dev-dependencies]
+dev = [
+    { name = "nwbinspector" },
+    { name = "pytest" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "dandi", marker = "extra == 'upload'", specifier = "==0.81.0" },
+    { name = "hdmf", specifier = "==6.2.0" },
+    { name = "neo", specifier = "==0.14.6" },
+    { name = "neuroconv", extras = ["openephys"], specifier = "==0.10.2" },
+    { name = "probeinterface", specifier = "==0.4.2" },
+    { name = "pynwb", specifier = "==4.2.0" },
+    { name = "pyyaml", specifier = "==6.0.3" },
+    { name = "spikeinterface", specifier = "==0.105.3" },
+]
+provides-extras = ["upload"]
+
+[package.metadata.requires-dev]
+dev = [
+    { name = "nwbinspector", specifier = "==0.7.2" },
+    { name = "pytest", specifier = "==9.1.1" },
+]
+
+[[package]]
 name = "numcodecs"
 version = "0.15.2"
 source = { registry = "https://pypi.org/simple" }
@@ -1310,10 +1354,10 @@ version = "2.5.4"
 source = { registry = "https://pypi.org/simple" }
 resolution-markers = [
     "python_full_version >= '3.13' and sys_platform == 'win32'",
-    "python_full_version == '3.12.*' and sys_platform == 'win32'",
     "python_full_version >= '3.13' and sys_platform == 'emscripten'",
-    "python_full_version == '3.12.*' and sys_platform == 'emscripten'",
     "python_full_version >= '3.13' and sys_platform != 'emscripten' and sys_platform != 'win32'",
+    "python_full_version == '3.12.*' and sys_platform == 'win32'",
+    "python_full_version == '3.12.*' and sys_platform == 'emscripten'",
     "python_full_version == '3.12.*' and sys_platform != 'emscripten' and sys_platform != 'win32'",
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/95/b0/c7453d0b6e2073c3264468b106ee1563750cecc910965e67357e3698c83e/numpy-2.5.4.tar.gz", hash = "sha256:9a94cf751c9ad8ebaa835bcd3d40dacf8534ad086b88c38029b65123c7999d2a", size = 20866315, upload-time = "2026-10-10T20:05:31.422Z" }
@@ -1340,50 +1384,6 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/e9/98/d27552990f1bd611ef3e7466adadc78312ea2df63b83aad47fdc3d3ca8df/numpy-2.5.4-cp313-cp313-win32.whl", hash = "sha256:5258bc06526964be5face2fc6f756857a3f24f21ec3e72ca131337a75b165d6c", size = 6134537, upload-time = "2026-10-10T20:03:30.511Z" },
     { url = "https://files.pythonhosted.org/packages/90/8c/140a40398a66b4471211be1affdb6ed24c486d581bd28d07b7f2fcb69540/numpy-2.5.4-cp313-cp313-win_amd64.whl", hash = "sha256:8b4d2fd2d34e5f8c9235ee787de5631a37a28402b15cb80814df973d2be54129", size = 12566113, upload-time = "2026-10-10T20:03:32.612Z" },
     { url = "https://files.pythonhosted.org/packages/34/52/01d205e5e8ccb27b2b0b141e801f22b830198c979111b0fa44771438d9a9/numpy-2.5.4-cp313-cp313-win_arm64.whl", hash = "sha256:bc39ac66a7a9a3fbd6134fda43136b60ffde99c8f4501e64e0d2b24da137babf", size = 10519523, upload-time = "2026-10-10T20:03:35.163Z" },
-]
-
-[[package]]
-name = "nwb-conversion-demo"
-version = "0.1.0"
-source = { editable = "." }
-dependencies = [
-    { name = "hdmf" },
-    { name = "neo" },
-    { name = "neuroconv", extra = ["openephys"] },
-    { name = "probeinterface" },
-    { name = "pynwb" },
-    { name = "pyyaml" },
-    { name = "spikeinterface" },
-]
-
-[package.optional-dependencies]
-upload = [
-    { name = "dandi" },
-]
-
-[package.dev-dependencies]
-dev = [
-    { name = "nwbinspector" },
-    { name = "pytest" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "dandi", marker = "extra == 'upload'", specifier = "==0.81.0" },
-    { name = "hdmf", specifier = "==6.2.0" },
-    { name = "neo", specifier = "==0.14.6" },
-    { name = "neuroconv", extras = ["openephys"], specifier = "==0.10.2" },
-    { name = "probeinterface", specifier = "==0.4.2" },
-    { name = "pynwb", specifier = "==4.2.0" },
-    { name = "pyyaml", specifier = "==6.0.3" },
-    { name = "spikeinterface", specifier = "==0.105.3" },
-]
-provides-extras = ["upload"]
-
-[package.metadata.requires-dev]
-dev = [
-    { name = "nwbinspector", specifier = "==0.7.2" },
-    { name = "pytest", specifier = "==9.1.1" },
 ]
 
 [[package]]

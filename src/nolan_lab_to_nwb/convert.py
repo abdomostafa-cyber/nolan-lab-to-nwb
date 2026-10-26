@@ -1,6 +1,6 @@
 """Convert the Nolan lab open-field tetrode session to NWB.
 
-Usage: ``python -m nwb_conversion_demo.convert --data-dir data/raw/1544_2023-04-21_09-55-34_of --output out.nwb``
+Usage: ``python -m nolan_lab_to_nwb.convert --data-dir data/raw/1544_2023-04-21_09-55-34_of --output out.nwb``
 """
 
 from __future__ import annotations

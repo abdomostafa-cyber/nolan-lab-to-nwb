@@ -266,3 +266,72 @@ yet.
   - Electrode → tetrode mapping matches `settings.xml`.
   - 56/56 sync pulses with identical edge times.
 - NWB Inspector on the full file: 1 issue, CRITICAL `check_subject_age` (open).
+
+---
+
+## 2026-10-27: Milestone 4, validation and tests
+
+Test design: every expected value is either a literal confirmed by hand (from `settings.xml`,
+the Zenodo record, or the raw analysis logged above) or computed by `tests/raw_openephys.py`,
+a numpy-only reader written from the Open Ephys format description. Nothing is compared against
+NeuroConv, neo or SpikeInterface output. The reader has its own tests: big-endian samples decoded
+by hand from the bytes, rejection of truncated files, and the event records.
+
+### Test caught a real bug: the Milestone 3 workaround broke on a second `run_conversion`
+- **What went wrong:** In Milestone 3 I worked around the NeuroConv `neo_reader` bug by
+  trimming the padding inside `temporally_align_data_interfaces`, "after metadata is built".
+  That held for one call only. NeuroConv's `run_conversion` calls `validate_metadata` →
+  `get_metadata_schema` → `get_metadata` every time. The second call on the same converter
+  reached the already-sliced recording and raised the same `AttributeError`.
+- **How it was caught:** `test_run_conversion_twice_is_idempotent`. I wrote it to check
+  that the time shift doesn't stack; it found this instead.
+- **Fix:** `SliceSafeOpenEphysLegacyRecordingInterface` overrides `get_metadata` to read
+  from `self._extractor_instance`, the unwrapped extractor. It is a local backport of the
+  upstream fix proposed for Milestone 5. The trim moved back into `__init__`.
+- **Lesson:** A workaround that relies on call order in a framework is a guess about the
+  framework. Test the second call, not just the first.
+
+### Agent error in a test: expected pulse width was wrong, not the data
+- **What went wrong:** `test_sync_pulses_match_independent_detection` asserted a width of
+  0.150 s ± 2 samples. The fixture pulse is 0.1501 s (4503 samples). The full-session
+  analysis in Milestone 3 had already shown widths of 0.150067–0.150100 s, and I wrote the
+  test from the rounded "150 ms" instead of from that log.
+- **How it was caught:** The test failed on both fixtures.
+- **Fix:** Bound by the measured range, 0.1500–0.1502 s. The edge times themselves are
+  compared exactly against the independent detection.
+- **Lesson:** Take expected values from the measurement log, not from the summary sentence.
+
+### Deprecated `Device.manufacturer` (pynwb 4)
+- The test run showed `DeprecationWarning: The 'manufacturer' field is deprecated. Instead,
+  use DeviceModel.manufacturer`. NWB Inspector 0.7.2 does not flag it.
+- **Fix:** `DeviceModels` entry in the YAML, linked with `device_model_metadata_key`. The board
+  is created with NeuroConv's `_add_device_to_nwbfile`, which resolves the model; it is private,
+  but the public `add_device_from_metadata` only handles the old list-based metadata format.
+  The suite now runs with `-W error::DeprecationWarning:hdmf.utils`, so a return of this fails.
+
+### Rename: nwb-conversion-demo → nolan-lab-to-nwb
+Renamed to follow CatalystNeuro's `<lab>-lab-to-nwb` convention. Package `nolan_lab_to_nwb`, CLI
+`nolan-lab-to-nwb-convert`, git remote `abdomostafa-cyber/nolan-lab-to-nwb`. Earlier entries keep
+the old names as they were at the time. The GitHub repository itself is renamed in its web
+settings (no credentials are handled here). The local folder name is unchanged.
+
+### Subject metadata: literature search found no source for mouse 1544
+- A side session searched for a Vandrey/Nolan paper or preprint from 2023 onward with MEC
+  tetrode open-field recordings that could cover session 1544 (April 2023). It found none.
+  The session looks unpublished.
+- Two lab papers describe the same rig, but they disagree on the animals. Gerlei et al.
+  2020 (*Nat Commun*, doi:10.1038/s41467-020-17500-1) used the "p038 line", 4 male and 4
+  female, 7–13 weeks at implant. Clark & Nolan 2024 (*eLife* 89356) used 9 male C57BL/6J.
+  Neither is copied into `Subject`, which stays sex `U` with no age or strain. The missing
+  age therefore remains an intentional Inspector finding (CRITICAL `check_subject_age`). The
+  user is emailing the lab to ask.
+- **Checked before use:** I read the Gerlei et al. 2020 Methods myself rather than citing
+  the side session's summary. Confirmed: LED pulses "at random intervals (20–60 s)" to
+  sync position with ephys; four tetrodes of 18 µm 90/10 Pt-Ir wire; Open Ephys board with
+  an Intan RHD2000 SPI cable. *Not* stated there: the pulse duration, and whether the LED
+  drive was recorded on an ADC channel.
+- **What changed in the file:** The SyncPulses description says "consistent with the lab's
+  published LED synchronisation procedure … not confirmed for this session". The tetrode
+  drive description cites the published wire spec as lab practice, "not confirmed for this
+  animal". 56 pulses in 2219.76 s (median interval 41 s, range 20–58 s) fits the published
+  20–60 s.

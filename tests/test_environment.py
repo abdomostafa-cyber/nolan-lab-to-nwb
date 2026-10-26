@@ -4,9 +4,9 @@ from importlib.metadata import version
 
 
 def test_package_imports():
-    import nwb_conversion_demo
+    import nolan_lab_to_nwb
 
-    assert nwb_conversion_demo.__version__ == version("nwb-conversion-demo")
+    assert nolan_lab_to_nwb.__version__ == version("nolan-lab-to-nwb")
 
 
 def test_openephys_legacy_interface_available():

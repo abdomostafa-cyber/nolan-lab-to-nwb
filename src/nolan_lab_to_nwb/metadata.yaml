@@ -39,19 +39,28 @@ Subject:
     Mouse implanted with a four-tetrode drive aimed at medial entorhinal cortex. Sex, age,
     strain and genotype are not reported in the public dataset.
 
+# pynwb 4 moved "manufacturer" from Device to DeviceModel (a Device's own field is deprecated).
+DeviceModels:
+  open_ephys_acquisition_board:
+    name: OpenEphysAcquisitionBoardModel
+    manufacturer: Open Ephys
+    description: Open Ephys acquisition board (Intan RHD2000 interface, read by the "Rhythm FPGA" source).
+
 Devices:
   acquisition_board:
     name: OpenEphysAcquisitionBoard
     description: >-
-      Open Ephys acquisition board read by the "Rhythm FPGA" source of Open Ephys GUI 0.4.2.1.
-      Headstage: Intan RHD2000-series amplifier, inferred from the 0.195 uV/bit electrode and
+      Acquisition board used for this session, read by the "Rhythm FPGA" source of Open Ephys GUI
+      0.4.2.1. Headstage: Intan RHD2000-series amplifier, inferred from the 0.195 uV/bit electrode and
       37.4 uV/bit auxiliary scaling in the file headers; the exact headstage model is not documented.
-    manufacturer: Open Ephys
+    device_model_metadata_key: open_ephys_acquisition_board
   tetrode_drive:
     name: TetrodeDrive
     description: >-
-      Four tetrodes (4 wires each, 16 channels). Wire material, diameter and impedance
-      are not reported in the dataset.
+      Four tetrodes (4 wires each, 16 channels). Wire material, diameter and impedance are not
+      reported for this session. The lab's published practice is four tetrodes of 18 um HML-coated
+      90% platinum / 10% iridium wire on a 16-channel microdrive (Gerlei et al. 2020, Nat Commun,
+      doi:10.1038/s41467-020-17500-1); not confirmed for this animal.
 
 Ecephys:
   ElectrodeGroups:

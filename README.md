@@ -1,11 +1,11 @@
-# nwb-conversion-demo
+# nolan-lab-to-nwb
 
 Converting a real lab recording to [NWB](https://www.nwb.org/) with
 [NeuroConv](https://github.com/catalystneuro/neuroconv), validating it with
 [NWB Inspector](https://github.com/NeurodataWithoutBorders/nwbinspector), and checking
 the result against the raw files independently of the converter.
 
-> Status: work in progress. Conversion works end to end; tests and CI are next.
+> Status: conversion, validation and tests done; CI next.
 
 ## Dataset
 
@@ -34,7 +34,7 @@ uv run pytest
 Convert (about 2 minutes, writes a 2.1 GB file):
 
 ```bash
-uv run python -m nwb_conversion_demo.convert \
+uv run python -m nolan_lab_to_nwb.convert \
     --data-dir data/raw/1544_2023-04-21_09-55-34_of \
     --output data/nwb/sub-1544_ses-1544-2023-04-21-09-55-34-of_ecephys.nwb
 ```
@@ -49,7 +49,7 @@ Add `--stub` to write only the first 100 samples of each series, for a quick che
 | `acquisition/TimeSeriesAnalogInput` (× 8) | `100_ADC1-8.continuous` | volts, `conversion` = 152.6 µV/bit |
 | `acquisition/TimeSeriesAuxiliaryInput` (× 3) | `100_AUX1-3.continuous` | pinned at the int16 maximum in this session; kept, not presented as an accelerometer |
 | `intervals/SyncPulses` (56 rows) | detected on ADC1 | custom `SyncPulseInterface`, 2.5 V threshold |
-| `general/subject`, devices, session info | `src/nwb_conversion_demo/metadata.yaml` | values the files do not contain, each sourced or marked unknown |
+| `general/subject`, devices, session info | `src/nolan_lab_to_nwb/metadata.yaml` | values the files do not contain, each sourced or marked unknown |
 
 Custom code, beyond NeuroConv's `OpenEphysLegacyRecordingInterface`:
 - `OpenEphysLegacyAnalogInterface`: writes the AUX and ADC streams as `TimeSeries`. NeuroConv has
@@ -73,10 +73,53 @@ Custom code, beyond NeuroConv's `OpenEphysLegacyRecordingInterface`:
   camera-sync pulses and are written with their times, but nothing in this dataset can be
   aligned to them.
 
+## NWB Inspector report
+
+`uv run nwbinspector data/nwb/<file>.nwb --threshold BEST_PRACTICE_SUGGESTION` on the full file:
+
+| Importance | Check | Status |
+|---|---|---|
+| CRITICAL | `check_subject_age`: no age or date of birth | **Left on purpose.** The dataset reports neither, and no publication covers this animal. The lab's papers disagree on age, sex and strain, so nothing is guessed. Asked the lab. |
+
+Everything else the Inspector found along the way is fixed:
+- `check_electrodes_location_allen_ccf` (BEST_PRACTICE_VIOLATION): the electrodes table said
+  `unknown`. It now uses the Allen CCF term "Entorhinal area". The dataset says "aimed at MEC"
+  without a dorsal or ventral zone, so the parent term is used.
+
+`tests/test_inspector.py` fails on any issue at BEST_PRACTICE_VIOLATION or above that is not in
+this table. It also fails if a listed exception stops firing, so this table can't go stale.
+
+## How the result is verified
+
+The tests never compare the NWB file against NeuroConv's own reading of the data:
+
+- **Independent reader.** `tests/raw_openephys.py` decodes `.continuous` files with numpy only,
+  from the format description, and is tested on its own (big-endian samples decoded by hand
+  from the bytes).
+- **Round trip** (`tests/test_roundtrip.py`, on two 1 MB fixtures cut from the real files):
+  - every sample identical to the raw int16;
+  - `conversion` equals the header `bitVolts` (µV for CH, V for ADC/AUX);
+  - rate and start time;
+  - electrode → tetrode mapping and locations;
+  - the padding boundary;
+  - sync-pulse edges against an independent detection;
+  - session start time and subject.
+- **Full session** (`tests/test_full_session.py`, run locally, skipped in CI): all 27 channels
+  × 66,592,800 samples identical to the raw files; 56 pulses.
+- **Mutation check** (`scripts/mutation_check.py`): six plausible bugs are injected one at a
+  time, and the suite must fail on each. Current result: 6/6 caught. The six bugs: mV instead
+  of V, untrimmed padding, Channel Map off by one, start offset not removed, pulse edge one
+  sample early, UTC instead of BST.
+
+```bash
+uv run pytest                              # fixtures + full session if present
+uv run python scripts/mutation_check.py
+```
+
 ## Repository layout
 
 ```
-src/nwb_conversion_demo/   conversion package (CLI: python -m nwb_conversion_demo.convert)
+src/nolan_lab_to_nwb/   conversion package (CLI: python -m nolan_lab_to_nwb.convert)
 scripts/download_data.py   fetches and md5-verifies the raw data into data/ (gitignored)
 tests/                     pytest suite, runs on a trimmed fixture in CI
 DEVLOG.md                  what went wrong during development, how it was caught, how it was fixed

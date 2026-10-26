@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import numpy as np
 from neuroconv.basedatainterface import BaseDataInterface
+from neuroconv.datainterfaces import OpenEphysLegacyRecordingInterface
 from neuroconv.datainterfaces.ecephys.baserecordingastimeseriesinterface import (
     BaseRecordingAsTimeSeriesInterface,
 )
@@ -24,6 +25,24 @@ def channel_names(recording) -> list[str]:
     """Open Ephys channel names (CH1, ADC1, ...). The legacy extractor's channel *ids* drop the prefix
     ('1', '2', ...), so they repeat across streams and cannot identify a channel on their own."""
     return [str(name) for name in recording.get_property("channel_name")]
+
+
+class SliceSafeOpenEphysLegacyRecordingInterface(OpenEphysLegacyRecordingInterface):
+    """``OpenEphysLegacyRecordingInterface`` whose ``get_metadata`` survives a sliced recording.
+
+    NeuroConv 0.10.2 reads ``self.recording_extractor.neo_reader`` in ``get_metadata``. Any wrapper
+    (``frame_slice``, or NeuroConv's own ``remove_channels``) drops that attribute and the call raises
+    AttributeError. The base class keeps the unwrapped extractor as ``_extractor_instance``; metadata
+    is read from it. Local backport of the fix proposed upstream (see DEVLOG).
+    """
+
+    def get_metadata(self, **kwargs) -> DeepDict:
+        wrapped = self.recording_extractor
+        self.recording_extractor = self._extractor_instance
+        try:
+            return super().get_metadata(**kwargs)
+        finally:
+            self.recording_extractor = wrapped
 
 
 class OpenEphysLegacyAnalogInterface(BaseRecordingAsTimeSeriesInterface):

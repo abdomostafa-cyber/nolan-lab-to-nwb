@@ -18,10 +18,14 @@ from pathlib import Path
 
 import numpy as np
 from neuroconv import NWBConverter
-from neuroconv.datainterfaces import OpenEphysLegacyRecordingInterface
 from neuroconv.utils import DeepDict, dict_deep_update, load_dict_from_file
 
-from .interfaces import OpenEphysLegacyAnalogInterface, SyncPulseInterface, channel_names
+from .interfaces import (
+    OpenEphysLegacyAnalogInterface,
+    SliceSafeOpenEphysLegacyRecordingInterface,
+    SyncPulseInterface,
+    channel_names,
+)
 from .openephys_settings import SessionSettings, read_settings
 
 DEFAULT_METADATA_PATH = Path(__file__).parent / "metadata.yaml"
@@ -30,7 +34,7 @@ SAMPLES_PER_RECORD = 1024
 
 class NolanOpenFieldNWBConverter(NWBConverter):
     data_interface_classes = dict(
-        Recording=OpenEphysLegacyRecordingInterface,
+        Recording=SliceSafeOpenEphysLegacyRecordingInterface,
         AuxiliaryInput=OpenEphysLegacyAnalogInterface,
         AnalogInput=OpenEphysLegacyAnalogInterface,
         SyncPulses=SyncPulseInterface,
@@ -48,11 +52,13 @@ class NolanOpenFieldNWBConverter(NWBConverter):
         if len({recording.get_num_samples() for recording in recordings}) != 1:
             raise ValueError("Streams differ in length; the padding trim assumes one shared length.")
 
-        # The trim itself is applied in temporally_align_data_interfaces, i.e. after metadata is built:
-        # OpenEphysLegacyRecordingInterface.get_metadata reads ``recording_extractor.neo_reader``, which
-        # a FrameSliceRecording does not have (see DEVLOG).
-        self.raw_num_samples = recordings[0].get_num_samples()
         self.padding_samples = self._count_trailing_padding(recordings)
+        if self.padding_samples:
+            for interface in self.data_interface_objects.values():
+                recording = interface.recording_extractor
+                interface.recording_extractor = recording.frame_slice(
+                    start_frame=0, end_frame=recording.get_num_samples() - self.padding_samples
+                )
 
         recording = self.data_interface_objects["Recording"].recording_extractor
         recording.set_property("group_name", self._group_names(channel_names(recording)))
@@ -101,21 +107,19 @@ class NolanOpenFieldNWBConverter(NWBConverter):
 
         super().add_to_nwbfile(nwbfile=nwbfile, metadata=metadata, conversion_options=conversion_options)
         # NeuroConv creates a device only when an electrode group points to it; the acquisition board
-        # is referenced by none, so it is added here from the same metadata entry.
-        board = metadata["Devices"]["acquisition_board"]
-        if board["name"] not in nwbfile.devices:
-            nwbfile.create_device(**board)
+        # is referenced by none, so it is added here through the same helper (which also links its
+        # DeviceModel). The helper is private in NeuroConv 0.10.2; the public add_device_from_metadata
+        # only handles the old list-based format.
+        from neuroconv.tools.nwb_helpers import _add_device_to_nwbfile
+
+        _add_device_to_nwbfile(nwbfile=nwbfile, metadata=metadata, metadata_key="acquisition_board")
 
     def temporally_align_data_interfaces(self, metadata: dict | None = None, conversion_options: dict | None = None):
-        # Called by every run_conversion, so both steps are idempotent: the trim only applies to a stream
-        # still at its raw length, and the shift targets an absolute start of 0.
+        # Called by every run_conversion; shifting to an absolute target (0) keeps it idempotent.
         # shift_times moves t_start without materialising a 66.6M-sample time vector.
         for interface in self.data_interface_objects.values():
             recording = interface.recording_extractor
-            if self.padding_samples and recording.get_num_samples() == self.raw_num_samples:
-                recording = recording.frame_slice(start_frame=0, end_frame=self.raw_num_samples - self.padding_samples)
             recording.shift_times(-recording.get_start_time())
-            interface.recording_extractor = recording
 
 
 def build_metadata(converter: NolanOpenFieldNWBConverter, metadata_path: Path = DEFAULT_METADATA_PATH) -> dict:
@@ -157,9 +161,10 @@ def make_converter(folder_path: Path) -> NolanOpenFieldNWBConverter:
             table_name="SyncPulses",
             description=(
                 "Pulses on analog input ADC1 (0 V baseline, about 4.6 V high, 150 ms wide, irregularly "
-                "spaced 20-58 s apart). The pattern matches the random sync pulses commonly used to align "
-                "a tracking camera to the ephys clock, but the dataset does not document their source, "
-                "and no camera or position data are included."
+                "spaced 20-58 s apart). Consistent with the lab's published LED synchronisation procedure, "
+                "in which an LED in the camera's view flashes at random 20-60 s intervals to align position "
+                "tracking with ephys (Gerlei et al. 2020, Nat Commun, doi:10.1038/s41467-020-17500-1); not "
+                "confirmed for this session. No camera or position data are included in the dataset."
             ),
         ),
     )
