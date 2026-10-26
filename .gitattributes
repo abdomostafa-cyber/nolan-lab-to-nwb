@@ -2,3 +2,4 @@
 *.continuous binary
 *.events binary
 *.nwb binary
+tests/fixtures/** -text

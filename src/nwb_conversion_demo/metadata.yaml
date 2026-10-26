@@ -1,0 +1,84 @@
+# Lab, session, subject and device metadata that the raw files do not contain.
+# NeuroConv reads sampling rate, channel names and gains from the .continuous headers; this file is
+# merged on top of what it reads. Every value below is either taken from the Zenodo record /
+# settings.xml (cited inline) or marked as unknown. Nothing is guessed. See DEVLOG.md.
+
+NWBFile:
+  session_description: >-
+    Mouse foraging in an open field while four tetrodes aimed at medial entorhinal cortex
+    record wideband extracellular signals (Open Ephys GUI, legacy .continuous format).
+    The session also contains headstage accelerometer (AUX) and analog input (ADC) channels.
+    Animal position tracking is not part of the public dataset.
+  experiment_description: >-
+    One session from the SpikeInterface Training Dataset (Buccino & Halcrow, Zenodo
+    10.5281/zenodo.20726062, v2, CC BY 4.0): "Mouse running in an open field, recorded with
+    tetrodes ... Probe insertion aimed at MEC. Recorded by Brianna Vandrey in the Nolan Lab,
+    University of Edinburgh."
+  institution: University of Edinburgh
+  lab: Nolan Lab
+  experimenter:
+    - Vandrey, Brianna
+  session_id: 1544_2023-04-21_09-55-34_of
+  keywords:
+    - medial entorhinal cortex
+    - tetrode
+    - open field
+    - Open Ephys
+  # Wall-clock start from settings.xml <INFO><DATE> (local time of the acquisition PC,
+  # "OPENFIELD-PC"). Timezone assumed Europe/London; 21 Apr 2023 was in BST (UTC+01:00).
+  session_start_time: "2023-04-21T09:55:34+01:00"
+  related_publications:
+    - "doi:10.5281/zenodo.20726062"
+
+Subject:
+  # The session folder name starts with "1544"; taken to be the animal ID (assumption, see DEVLOG).
+  subject_id: "1544"
+  species: Mus musculus
+  sex: U  # not reported in the dataset
+  description: >-
+    Mouse implanted with a four-tetrode drive aimed at medial entorhinal cortex. Sex, age,
+    strain and genotype are not reported in the public dataset.
+
+Devices:
+  acquisition_board:
+    name: OpenEphysAcquisitionBoard
+    description: >-
+      Open Ephys acquisition board read by the "Rhythm FPGA" source of Open Ephys GUI 0.4.2.1.
+      Headstage: Intan RHD2000-series amplifier, inferred from the 0.195 uV/bit electrode and
+      37.4 uV/bit auxiliary scaling in the file headers; the exact headstage model is not documented.
+    manufacturer: Open Ephys
+  tetrode_drive:
+    name: TetrodeDrive
+    description: >-
+      Four tetrodes (4 wires each, 16 channels). Wire material, diameter and impedance
+      are not reported in the dataset.
+
+Ecephys:
+  ElectrodeGroups:
+    tetrode1: &tetrode
+      name: Tetrode1
+      description: >-
+        Tetrode 1 (channels CH1-CH4), grouping from the Spike Detector in settings.xml.
+        Targeted at medial entorhinal cortex; placement is not histologically confirmed in the dataset.
+      # Allen CCF term; the dataset gives the target as "MEC" without a dorsal/ventral zone,
+      # so the parent area is used rather than "Entorhinal area, medial part, dorsal zone".
+      location: Entorhinal area
+      device_metadata_key: tetrode_drive
+    tetrode2:
+      <<: *tetrode
+      name: Tetrode2
+      description: >-
+        Tetrode 2 (channels CH5-CH8), grouping from the Spike Detector in settings.xml.
+        Targeted at medial entorhinal cortex; placement is not histologically confirmed in the dataset.
+    tetrode3:
+      <<: *tetrode
+      name: Tetrode3
+      description: >-
+        Tetrode 3 (channels CH9-CH12), grouping from the Spike Detector in settings.xml.
+        Targeted at medial entorhinal cortex; placement is not histologically confirmed in the dataset.
+    tetrode4:
+      <<: *tetrode
+      name: Tetrode4
+      description: >-
+        Tetrode 4 (channels CH13-CH16), grouping from the Spike Detector in settings.xml.
+        Targeted at medial entorhinal cortex; placement is not histologically confirmed in the dataset.
