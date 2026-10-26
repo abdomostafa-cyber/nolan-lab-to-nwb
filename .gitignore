@@ -1,0 +1,21 @@
+# Raw and converted data never go in git (download with scripts/download_data.py)
+data/*
+!data/README.md
+*.nwb
+*.zip
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+build/
+dist/
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

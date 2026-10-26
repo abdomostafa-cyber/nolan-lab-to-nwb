@@ -1,0 +1,45 @@
+[project]
+name = "nwb-conversion-demo"
+version = "0.1.0"
+description = "Convert a Nolan lab Open Ephys tetrode recording (mouse MEC, open field) to NWB with NeuroConv, validated with NWB Inspector."
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "Abdalrhman Mostafa" }]
+# <3.14: neuroconv 0.10.2 caps numcodecs<0.16 unconditionally, while spikeinterface needs
+# numcodecs>=0.16.5 on Python 3.14, so the stack is unresolvable there (see DEVLOG 2026-10-27).
+requires-python = ">=3.11,<3.14"
+# Exact pins for the libraries whose behaviour the conversion depends on;
+# uv.lock pins everything else transitively.
+dependencies = [
+    "neuroconv[openephys]==0.10.2",
+    "pynwb==4.2.0",
+    "hdmf==6.2.0",
+    "spikeinterface==0.105.3",
+    "neo==0.14.6",
+    "probeinterface==0.4.2",
+    "pyyaml==6.0.3",
+]
+
+[project.optional-dependencies]
+upload = ["dandi==0.81.0"]
+
+[project.scripts]
+nwb-demo-convert = "nwb_conversion_demo.convert:main"
+
+[dependency-groups]
+dev = [
+    "pytest==9.1.1",
+    "nwbinspector==0.7.2",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/nwb_conversion_demo"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"

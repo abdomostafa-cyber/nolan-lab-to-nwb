@@ -1,0 +1,4 @@
+* text=auto eol=lf
+*.continuous binary
+*.events binary
+*.nwb binary
