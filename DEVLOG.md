@@ -23,6 +23,7 @@ Entry format: **What went wrong**, **How it was caught**, **Fix**, **Lesson**.
 | 12 | Inspector CLI exits 0 on CRITICAL findings | NWB Inspector | checking the exit code before writing CI |
 | 13 | Bad reproducer (incomplete metadata) almost reported a false bug | agent | reading where the exception was raised |
 | 14 | Patch silently not applied (CRLF) | agent / Windows | the "patched" repro still failing |
+| 15 | Duplicate check missed a same-day upstream fix (#2140) | agent | the user checking GitHub's activity view |
 
 Plus smaller ones in the entries below: version drift on Zenodo, a broken remote-zip reader,
 Windows path handling, a stalled interpreter download, `.gitattributes` rewriting fixtures, and
@@ -436,3 +437,28 @@ upstream text was written. What was done:
   exactly the two new tests.
 - The draft issue now covers both interfaces and is shorter. It still lists the other six
   interfaces as **not tested**.
+
+### Agent error: the duplicate check missed a same-day upstream fix (caught by the user)
+- **What went wrong:** I told the user a live search found no duplicate and that the Axon case was
+  unreported. In fact the maintainer had opened and merged
+  [#2140](https://github.com/catalystneuro/neuroconv/pull/2140), "Keep `AxonRecordingInterface.get_metadata`
+  working after `remove_channels`", on 2026-10-26, within an hour of answering #2137. It landed one
+  commit after the `main` I had cloned (`2a46c7e`). The draft then reported a bug that was already
+  fixed.
+- **How it was caught:** The user looked at the repository's activity on GitHub, saw that #2137 was
+  the only recent issue, and asked me to recheck. Listing issues *and PRs* by creation date (not
+  keyword search) showed #2140 at once. My keyword searches had returned only #2137, most likely
+  because GitHub's search index lags behind very recent PRs. I had also searched issues where I
+  should have looked at PRs and recent commits.
+- **Fix:** Dropped Axon from the draft. Rebased the clone on `2c85f65` and reconfirmed that
+  `OpenEphysLegacyRecordingInterface` is still affected there (`get_metadata` and plain
+  `run_conversion`). Rewrote the fix in the maintainer's own style from #2140 (keep the reader
+  in `__init__`) rather than mine (`_extractor_instance`), with a test mirroring theirs and a
+  `changelog_entries/` fragment in their current format. The new test fails on current `main` and
+  passes with the fix. The legacy tests go from 17 passed + 1 failing (the new test) to 18 passed,
+  with the same Zarr skip.
+- **Lesson:** Before reporting upstream, list the latest PRs and commits by date and check the
+  current tip of `main`. Search is not a substitute for reading what's newest. The maintainer
+  fixing the Axon case independently also confirms the bug class, which makes the remaining
+  Open Ephys report much lower risk.
+

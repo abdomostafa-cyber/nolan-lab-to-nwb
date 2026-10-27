@@ -1,76 +1,58 @@
-# Draft issue for catalystneuro/neuroconv (NOT POSTED, for review)
+# Draft issue for catalystneuro/neuroconv (SUPERSEDED, not posted)
 
-> **Status:** draft, not posted. Verified 2026-10-27 against `main` at `2a46c7e` (0.11.0.dev0) and the
-> 0.10.2 release. Fix and tests: `neuroconv-get-metadata-after-remove-channels.patch` (same folder).
-> Fields follow the repo's bug-report template. **Rewrite in your own words before posting**, and
-> search the issues again first: `main` moves daily.
+> Superseded by `neuroconv-pr-description.md`: the fix goes upstream as a PR instead of an issue.
+> Kept for the record of what was checked.
+
+> **Status:** draft, not posted. Verified 2026-10-27 against `main` at `2c85f65`, which already
+> includes #2140. Fix and test: `neuroconv-openephyslegacy-get-metadata-after-remove-channels.patch`
+> (same folder), written in the same style as #2140.
+> **Rewrite in your own words before posting**, and check open issues *and pull requests* again
+> first. A keyword search missed #2140 the first time because it was only hours old.
 
 ---
 
-**Title:** `[Bug]: get_metadata() / run_conversion() raise AttributeError after remove_channels() (Axon, OpenEphysLegacy)`
+**Title:** `[Bug]: OpenEphysLegacyRecordingInterface.get_metadata() raises AttributeError after remove_channels()`
 
 ### What happened?
 
-After `interface.remove_channels(...)`, `get_metadata()` raises
-`AttributeError: 'ChannelSliceRecording' object has no attribute 'neo_reader'`. `run_conversion()`
-without explicit metadata fails the same way, since it calls `get_metadata()`.
-
-`remove_channels` replaces `interface.recording_extractor` with a `ChannelSliceRecording`, but
-`AxonRecordingInterface.get_metadata` and `OpenEphysLegacyRecordingInterface.get_metadata` read
-`self.recording_extractor.neo_reader`, which only the original extractor has.
-
-This affects the `remove_channels` + `ConverterPipe` workflow suggested in #2137 for mixed ABF
-files, and the `remove_channels` advice in the heterogeneous-offsets error message.
+#2140 fixed this for `AxonRecordingInterface`. `OpenEphysLegacyRecordingInterface` has the same
+problem on current `main`: after `remove_channels(...)`, `get_metadata()` raises
+`AttributeError: 'ChannelSliceRecording' object has no attribute 'neo_reader'`, because it reads the
+session start time through `self.recording_extractor.neo_reader`. `run_conversion()` without
+explicit metadata fails the same way.
 
 ### Steps to Reproduce
 
-With files from `ephy_testing_data`:
-
 ```python
-from neuroconv.datainterfaces import AxonRecordingInterface
+from neuroconv.datainterfaces import OpenEphysLegacyRecordingInterface
 
-interface = AxonRecordingInterface(
-    file_path=".../axon/extracellular_data/four_electrodes/24606005_SampleData.abf"
-)
-interface.remove_channels(channel_ids=[interface.channel_ids[-1]])  # 3 of 4 channels kept
+interface = OpenEphysLegacyRecordingInterface(folder_path=".../ephy_testing_data/openephys/OpenEphys_SampleData_1")
+interface.remove_channels(channel_ids=[interface.channel_ids[-1]])
 interface.get_metadata()  # AttributeError
 ```
-
-The same happens with `OpenEphysLegacyRecordingInterface(folder_path=".../openephys/OpenEphys_SampleData_1")`.
-
-Workaround: call `get_metadata()` before `remove_channels()` and pass the result to `run_conversion(metadata=...)`.
 
 ### Traceback
 
 ```
-  File ".../neuroconv/datainterfaces/ecephys/axon/axondatainterface.py", line 105, in get_metadata
+  File ".../neuroconv/datainterfaces/ecephys/openephys/openephyslegacydatainterface.py", line 137, in get_metadata
     neo_reader = self.recording_extractor.neo_reader
 AttributeError: 'ChannelSliceRecording' object has no attribute 'neo_reader'
 ```
 
-(OpenEphysLegacy: same error at `openephyslegacydatainterface.py`, line 137.)
-
 ### Possible fix
 
-The base class keeps the original extractor as `self._extractor_instance`, so reading from it is
-enough:
+The same approach as #2140: keep the reader in `__init__`, while the recording is still the
+neo-based extractor, and use it in `get_metadata`. I have this as a small PR with a regression test
+mirroring the one in #2140, if you'd like it. Checked locally:
 
-```diff
--        neo_reader = self.recording_extractor.neo_reader
-+        neo_reader = self._extractor_instance.neo_reader
-```
+- the new test fails on current `main` and passes with the change;
+- `tests/test_on_data/ecephys/test_openephyslegacy.py` and the OpenEphysLegacy tests in
+  `test_recording_interfaces.py` give 17 passed + the new test failing before, and 18 passed after,
+  with the same single Zarr skip. That includes `test_openephyslegacy_date_parse`, which edits the
+  reader's annotations after construction.
 
-I have this as a small PR, with a regression test for each of the two interfaces, if you'd like it.
-Checked locally:
-
-- each new test fails without the change and passes with it;
-- selected tests (`-k "Axon and not Axona or OpenEphysLegacy"` plus `test_openephyslegacy.py`)
-  go from 29 passed / 15 skipped to 31 passed / 15 skipped, with the same skips before and after.
-
-**Not tested:** the same `self.recording_extractor.neo_reader` read appears in `get_metadata`, or in
-helpers it calls, in the AlphaOmega, Axona, MaxOne, MEArec, Neuralynx and Plexon interfaces. I don't
-have their test data set up, so I can't confirm them. Glad to include them if you want the same
-change applied there.
+**Not tested:** the same read inside `get_metadata`, or helpers it calls, is still there for
+AlphaOmega, Axona, MaxOne, MEArec, Neuralynx and Plexon. I don't have their test data set up.
 
 ### Operating System
 Windows 11
@@ -79,7 +61,7 @@ Windows 11
 3.11.7
 
 ### Package Versions
-neuroconv `main` (2a46c7e) and 0.10.2 · spikeinterface 0.105.3 · neo 0.14.5 (main env) / 0.14.6
+neuroconv `main` (2c85f65) · spikeinterface 0.105.3 · neo 0.14.5
 
 ---
 
@@ -89,7 +71,5 @@ These stay in this project's DEVLOG and README; neither is a clear bug.
 
 1. **NeuroConv: legacy start time cut to the date.** `'95534'` (09:55:34) triggers the "ambiguous"
    warning and only the date is kept. This is deliberate, and covered by
-   `test_openephyslegacy_date_parse`. A possible suggestion would be to fall back to `settings.xml`
-   `<INFO><DATE>`. That would first need checking against how Open Ephys GUI 0.4 formats `date_created`.
-2. **NWB Inspector: the CLI exits 0 even with CRITICAL findings.** That may be intended. At most this
-   is a question about whether a fail-threshold option would be welcome.
+   `test_openephyslegacy_date_parse`.
+2. **NWB Inspector: the CLI exits 0 even with CRITICAL findings.** That may be intended.
