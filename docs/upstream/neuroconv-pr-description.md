@@ -1,6 +1,6 @@
 # PR description for catalystneuro/neuroconv
 
-> **Status:** opened 2026-10-27 as [catalystneuro/neuroconv#2141](https://github.com/catalystneuro/neuroconv/pull/2141), from `abdomostafa-cyber:fix/openephyslegacy-get-metadata-after-remove-channels`
+> **Status:** opened and merged 2026-10-27 as [catalystneuro/neuroconv#2141](https://github.com/catalystneuro/neuroconv/pull/2141) (merge commit `128578d`), from `abdomostafa-cyber:fix/openephyslegacy-get-metadata-after-remove-channels`
 > on top of `main` at `2c85f65`: the fix (`c85dad1`) plus the changelog entry renamed to `2141.bugfix.md` (`296e2ef`).
 > Below is the draft it started from; the posted text was edited by hand and adds a short introduction.
 

@@ -55,7 +55,7 @@ Beyond NeuroConv's `OpenEphysLegacyRecordingInterface`, the conversion adds
 - **`SyncPulseInterface`:** ADC1 pulses as a `TimeIntervals` table.
 - **`read_settings`** ([`openephys_settings.py`](src/nolan_lab_to_nwb/openephys_settings.py)):
   tetrode grouping (Channel Map composed with the Spike Detector) and the hardware filter.
-- **`SliceSafeOpenEphysLegacyRecordingInterface`:** a local backport of an upstream fix (below).
+- **`SliceSafeOpenEphysLegacyRecordingInterface`:** a local backport of an upstream fix (below), until a NeuroConv release includes it.
 
 ## Timestamps and alignment
 
@@ -135,14 +135,14 @@ No test compares the NWB file with NeuroConv's own reading of the data:
 
 ## Rough edges found upstream
 
-One fix is submitted upstream ([catalystneuro/neuroconv#2141](https://github.com/catalystneuro/neuroconv/pull/2141)); the rest are notes. See [docs/upstream/](docs/upstream/).
+One fix is merged upstream ([catalystneuro/neuroconv#2141](https://github.com/catalystneuro/neuroconv/pull/2141)); the rest are notes. See [docs/upstream/](docs/upstream/).
 
 - **NeuroConv (bug):** `get_metadata()` and `run_conversion()` raise `AttributeError` after the
   interface's own `remove_channels()`. The maintainers fixed the Axon case on the same day
   ([catalystneuro/neuroconv#2140](https://github.com/catalystneuro/neuroconv/pull/2140)).
   `OpenEphysLegacyRecordingInterface` is still affected on current `main`, reproduced on NeuroConv's
   own test data. A fix in the same style as #2140, with a regression test that fails without it,
-  is open as [catalystneuro/neuroconv#2141](https://github.com/catalystneuro/neuroconv/pull/2141) ([patch copy](docs/upstream/neuroconv-openephyslegacy-get-metadata-after-remove-channels.patch)).
+  was merged as [catalystneuro/neuroconv#2141](https://github.com/catalystneuro/neuroconv/pull/2141) ([patch copy](docs/upstream/neuroconv-openephyslegacy-get-metadata-after-remove-channels.patch)).
 - **NeuroConv (design question):** a legacy header time like `95534` is reduced to the date,
   even though `settings.xml` holds the full time.
 - **NWB Inspector (question):** the CLI exit code doesn't reflect findings.

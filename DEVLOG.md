@@ -468,6 +468,11 @@ upstream text was written. What was done:
   still at `2c85f65`). The commit is authored with the email linked to the user's GitHub account
   and keeps the Claude co-author line. A second commit renamed the changelog entry from
   `PRNUMBER.bugfix.md` to `2141.bugfix.md`, which can only be done once the PR number exists.
+- **Outcome:** the maintainer approved the CI workflows and merged it the same day (merge commit
+  `128578d`, after merging `main` into the branch). The only failing checks were
+  `run-live-service-tests` on Python 3.14, which stop at a credentials check because GitHub does
+  not pass repository secrets to PRs from forks; the job's own message says this is expected for
+  external contributors. The other 11 checks passed, and Codecov reported every changed line covered.
 - **Not done:** the local backport (`SliceSafeOpenEphysLegacyRecordingInterface`) stays until the
   fix is in a NeuroConv release this project pins.
 
