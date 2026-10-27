@@ -462,3 +462,12 @@ upstream text was written. What was done:
   fixing the Axon case independently also confirms the bug class, which makes the remaining
   Open Ephys report much lower risk.
 
+### Upstream PR opened
+- **What:** The user opened [catalystneuro/neuroconv#2141](https://github.com/catalystneuro/neuroconv/pull/2141) on 2026-10-27 with the Open Ephys legacy fix, after rechecking
+  that nothing newer than #2140 had landed (latest PRs, issues and branches listed by date; `main`
+  still at `2c85f65`). The commit is authored with the email linked to the user's GitHub account
+  and keeps the Claude co-author line. A second commit renamed the changelog entry from
+  `PRNUMBER.bugfix.md` to `2141.bugfix.md`, which can only be done once the PR number exists.
+- **Not done:** the local backport (`SliceSafeOpenEphysLegacyRecordingInterface`) stays until the
+  fix is in a NeuroConv release this project pins.
+

@@ -1,8 +1,8 @@
 From c85dad196b05b690f5ee399015439ac6ae5f4693 Mon Sep 17 00:00:00 2001
 From: Abdalrhman Mostafa <abdomostafag10@gmail.com>
 Date: Tue, 27 Oct 2026 03:19:13 +0300
-Subject: [PATCH] Keep `OpenEphysLegacyRecordingInterface.get_metadata` working
- after `remove_channels`
+Subject: [PATCH 1/2] Keep `OpenEphysLegacyRecordingInterface.get_metadata`
+ working after `remove_channels`
 
 `get_metadata` read the session start time through `recording_extractor.neo_reader`, which the
 channel slice that `remove_channels` leaves in place of the recording does not carry. Keep the
@@ -64,6 +64,25 @@ index 228d93d..5f04710 100644
 +        self.interface.remove_channels(channel_ids=[self.interface.channel_ids[-1]])
 +
 +        assert self.interface.get_metadata()["NWBFile"]["session_start_time"] == session_start_time
+-- 
+2.33.0.windows.2
+
+
+From 296e2efd9181ed763e9f33ea612f5c789e3e20e7 Mon Sep 17 00:00:00 2001
+From: Abdalrhman Mostafa <abdomostafag10@gmail.com>
+Date: Tue, 27 Oct 2026 12:30:53 +0300
+Subject: [PATCH 2/2] Name the changelog entry after the PR number
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+---
+ changelog_entries/{PRNUMBER.bugfix.md => 2141.bugfix.md} | 0
+ 1 file changed, 0 insertions(+), 0 deletions(-)
+ rename changelog_entries/{PRNUMBER.bugfix.md => 2141.bugfix.md} (100%)
+
+diff --git a/changelog_entries/PRNUMBER.bugfix.md b/changelog_entries/2141.bugfix.md
+similarity index 100%
+rename from changelog_entries/PRNUMBER.bugfix.md
+rename to changelog_entries/2141.bugfix.md
 -- 
 2.33.0.windows.2
 

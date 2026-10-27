@@ -1,12 +1,8 @@
-# PR description for catalystneuro/neuroconv (for review, edit before use)
+# PR description for catalystneuro/neuroconv
 
-> **Branch:** `fix/openephyslegacy-get-metadata-after-remove-channels`, one commit (`c85dad1`) on top of
-> `main` at `2c85f65`. Push it to your fork (`abdomostafa-cyber/neuroconv`), then open the PR against
-> `catalystneuro/neuroconv:main`.
-> **After opening:** rename `changelog_entries/PRNUMBER.bugfix.md` to `<PR number>.bugfix.md` in a
-> second commit. The file name has to be the PR number, which doesn't exist until the PR does.
-> This supersedes `neuroconv-issue-draft.md`: a ready PR is less work for the maintainers than an
-> issue asking whether they want one.
+> **Status:** opened 2026-10-27 as [catalystneuro/neuroconv#2141](https://github.com/catalystneuro/neuroconv/pull/2141), from `abdomostafa-cyber:fix/openephyslegacy-get-metadata-after-remove-channels`
+> on top of `main` at `2c85f65`: the fix (`c85dad1`) plus the changelog entry renamed to `2141.bugfix.md` (`296e2ef`).
+> Below is the draft it started from; the posted text was edited by hand and adds a short introduction.
 
 ---
 
