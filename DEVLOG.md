@@ -476,3 +476,53 @@ upstream text was written. What was done:
 - **Not done:** the local backport (`SliceSafeOpenEphysLegacyRecordingInterface`) stays until the
   fix is in a NeuroConv release this project pins.
 
+
+## 2026-10-29: Follow-up fixes for the other interfaces (held for review)
+
+The maintainer asked for one PR per interface on #2141. AlphaOmega is #2152. Axona, MEArec, Neuralynx
+and Plexon (three classes in one file) are committed locally and held until #2152 is reviewed;
+MaxOne is held as a question, because its test class is skipped on every platform. Each fix follows
+#2140/#2141: read what `get_metadata` needs in `__init__`, while the recording still has its
+`neo_reader`. Each new test failed on `main` before the fix was applied.
+
+### Agent error: committed after a failed pre-commit hook (caught by reading the hook output)
+- **What went wrong:** The Neuralynx test had a line over the length limit. `black` failed and
+  rewrote the file, but `git commit` ran in the same command and committed the unformatted version.
+- **How it was caught:** Reading the hook output after the command: "black ... Failed - files were
+  modified by this hook".
+- **Fix:** Rewrote the line in #2140's style (a `folder_path` variable), re-ran hooks and tests, and
+  amended the local, unpushed commit. Hooks and commit now run as separate steps.
+- **Lesson:** Never chain the commit to the hooks; read the hook result first.
+
+### Agent error: a test that only removed the only channel (caught by a manual conversion)
+- **What went wrong:** The first Neuralynx test went into the only collected Neuralynx class, whose
+  stream holds a single channel. "Remove the last channel" left an empty recording, so the test
+  passed with the fix but tested a degenerate case.
+- **How it was caught:** A manual `run_conversion` on that stream raised `IndexError`; listing the
+  channels showed one.
+- **Fix:** Moved the test to the Cheetah 5.7.4 data (5 channels). While doing so, found that the
+  `V574`, `V563` and `V540` test classes have no base class or `test_` methods, so pytest collects
+  nothing from them (noted in the PR draft, not changed).
+
+### Agent error: a test inserted into the wrong class (caught by a test passing that should fail)
+- **What went wrong:** My script found the end of each Plexon test class by searching for the next
+  `class` line. `TestPlexonLFPInterface` is followed by a `@pytest.mark.skipif` decorator, so the
+  LFP test landed inside `TestPlexon2RecordingInterface`, overriding that class's new test by name.
+  There was no LFP test, and the "Plexon2" failure was really the LFP test.
+- **How it was caught:** On `main`, the PlexonLFP test class passed while a manual run of the same
+  steps raised the `AttributeError`. A test that passes on known-broken code is wrong.
+- **Fix:** Class ends are now the next line at column 0 (decorators included). Checked the earlier
+  branches' diffs: their tests sit right before the correct next class.
+
+### Side effect: an experiment downloaded a vendor plugin
+- **What happened:** MaxOne only runs on Linux. To reproduce its bug on Windows I bypassed that check
+  in a scratch script. neo then auto-downloaded Maxwell's HDF5 compression plugin to
+  `~/hdf5_plugin_path_maxwell/compression.dll`, its documented behaviour.
+- **How it was caught:** The script's own output.
+- **Fix:** Reported to the user; the folder can be deleted. Lesson: check what a library does on
+  first use before running it outside its supported platform.
+
+### Found along the way (not in these PRs)
+- `AxonaUnitRecordingInterface` cannot be constructed on `main`: it passes `filename=` to a parent
+  that does not accept it (`TypeError`). It has no tests.
+- `TestMaxOneRecordingInterface` is skipped unconditionally and the interface is `# pragma: no cover`.
