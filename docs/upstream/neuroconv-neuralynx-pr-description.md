@@ -1,7 +1,7 @@
 # PR description for catalystneuro/neuroconv: Neuralynx (for review, edit before use)
 
-> **Branch:** `fix/neuralynx-get-metadata-after-remove-channels`, one commit (`54d80b6`) on top of
-> `main` at `189935f`. One of the six follow-ups from #2141 (AlphaOmega is #2152).
+> **Branch:** `fix/neuralynx-get-metadata-after-remove-channels`, one commit (`1970afc`) on top of
+> `main` at `529e218`. One of the six follow-ups from #2141 (AlphaOmega, #2152, is merged).
 > **After opening:** rename `changelog_entries/PRNUMBER.bugfix.md` to `<PR number>.bugfix.md` in a
 > second commit.
 

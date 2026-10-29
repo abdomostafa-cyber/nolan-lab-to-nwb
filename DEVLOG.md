@@ -526,3 +526,10 @@ MaxOne is held as a question, because its test class is skipped on every platfor
 - `AxonaUnitRecordingInterface` cannot be constructed on `main`: it passes `filename=` to a parent
   that does not accept it (`TypeError`). It has no tests.
 - `TestMaxOneRecordingInterface` is skipped unconditionally and the interface is `# pragma: no cover`.
+
+### Outcome: #2152 merged
+- h-mayorquin approved #2152 ("LGTM") and merged it on 2026-10-29 with no changes to the code or
+  test. The squash commit (`424eaf9`) kept the Claude co-author line this time.
+- Rebased the five held branches onto the new `main` (`529e218`): no conflicts, and each interface's
+  tests give the same counts as before (Axona 25, MEArec 13, Neuralynx 13, Plexon 41 passed; MaxOne
+  still skipped). Still held, to be pushed one at a time with approval.

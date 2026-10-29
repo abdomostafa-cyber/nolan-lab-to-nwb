@@ -1,7 +1,7 @@
 # PR description for catalystneuro/neuroconv: Plexon (for review, edit before use)
 
-> **Branch:** `fix/plexon-get-metadata-after-remove-channels`, one commit (`ac2bc44`) on top of
-> `main` at `189935f`. One of the six follow-ups from #2141 (AlphaOmega is #2152).
+> **Branch:** `fix/plexon-get-metadata-after-remove-channels`, one commit (`d2af67b`) on top of
+> `main` at `529e218`. One of the six follow-ups from #2141 (AlphaOmega, #2152, is merged).
 > **After opening:** rename `changelog_entries/PRNUMBER.bugfix.md` to `<PR number>.bugfix.md` in a
 > second commit.
 

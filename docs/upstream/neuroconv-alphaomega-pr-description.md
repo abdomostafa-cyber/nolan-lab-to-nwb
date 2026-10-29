@@ -1,6 +1,7 @@
 # PR description for catalystneuro/neuroconv: AlphaOmega (for review, edit before use)
 
 > **Status:** opened 2026-10-28 as [catalystneuro/neuroconv#2152](https://github.com/catalystneuro/neuroconv/pull/2152); changelog entry renamed in a second commit.
+> Approved and merged by h-mayorquin on 2026-10-29 as `424eaf9`, unchanged.
 > **Branch:** `fix/alphaomega-get-metadata-after-remove-channels`, one commit (`af0cf00`) on top of
 > `main` at `ea1f362`. First of the six follow-ups the maintainer asked for in #2141, one PR per
 > interface, in the same format.
