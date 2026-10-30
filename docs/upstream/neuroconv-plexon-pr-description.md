@@ -1,7 +1,8 @@
 # PR description for catalystneuro/neuroconv: Plexon (for review, edit before use)
 
 > **Branch:** `fix/plexon-get-metadata-after-remove-channels`, one commit (`d2af67b`) on top of
-> `main` at `529e218`. One of the six follow-ups from #2141 (AlphaOmega, #2152, is merged).
+> `main` at `529e218`. One of the six follow-ups from #2141 (AlphaOmega #2152 merged; Axona #2159 open).
+> **Pushed** to the fork on 2026-10-30, ready to open.
 > **After opening:** rename `changelog_entries/PRNUMBER.bugfix.md` to `<PR number>.bugfix.md` in a
 > second commit.
 
@@ -11,7 +12,7 @@
 
 **Body:**
 
-Follow-up to #2141, like #2152. `PlexonRecordingInterface`, `PlexonLFPInterface` and
+Follow-up to #2141, like #2152 and #2159. `PlexonRecordingInterface`, `PlexonLFPInterface` and
 `Plexon2RecordingInterface` read `recording_extractor.neo_reader` and `recording_extractor.block_index`
 in `get_metadata`, so after `remove_channels` all three raise
 `AttributeError: 'ChannelSliceRecording' object has no attribute 'neo_reader'`.
@@ -27,3 +28,5 @@ Checked locally (Windows, so the Plexon2 tests run):
 - `run_conversion` after `remove_channels`, without passing metadata, writes 3 of the 4 channels with
   the same start time for each of the three interfaces;
 - pre-commit hooks pass.
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)

@@ -1,7 +1,8 @@
 # PR description for catalystneuro/neuroconv: MEArec (for review, edit before use)
 
 > **Branch:** `fix/mearec-get-metadata-after-remove-channels`, one commit (`60dd307`) on top of
-> `main` at `529e218`. One of the six follow-ups from #2141 (AlphaOmega, #2152, is merged).
+> `main` at `529e218`. One of the six follow-ups from #2141 (AlphaOmega #2152 merged; Axona #2159 open).
+> **Pushed** to the fork on 2026-10-30, ready to open.
 > **After opening:** rename `changelog_entries/PRNUMBER.bugfix.md` to `<PR number>.bugfix.md` in a
 > second commit.
 
@@ -11,7 +12,7 @@
 
 **Body:**
 
-Follow-up to #2141, like #2152. `MEArecRecordingInterface.get_metadata` reads the simulation info
+Follow-up to #2141, like #2152 and #2159. `MEArecRecordingInterface.get_metadata` reads the simulation info
 (device name and recording parameters) through `recording_extractor.neo_reader`, so after
 `remove_channels` it raises `AttributeError: 'ChannelSliceRecording' object has no attribute 'neo_reader'`.
 
@@ -25,3 +26,5 @@ Checked locally:
 - `run_conversion` after `remove_channels` (with a `session_start_time` supplied, which MEArec
   conversions need either way) writes 31 of the 32 channels with the same device;
 - pre-commit hooks pass.
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
