@@ -2,7 +2,7 @@
 
 > **Branch:** `fix/neuralynx-get-metadata-after-remove-channels`, one commit (`1970afc`) on top of
 > `main` at `529e218`. One of the six follow-ups from #2141 (AlphaOmega #2152 merged; Axona #2159 open).
-> **Pushed** to the fork on 2026-10-30, ready to open.
+> **Status:** opened 2026-10-30 as [catalystneuro/neuroconv#2168](https://github.com/catalystneuro/neuroconv/pull/2168); changelog entry renamed in a second commit (`769809b`).
 > **After opening:** rename `changelog_entries/PRNUMBER.bugfix.md` to `<PR number>.bugfix.md` in a
 > second commit.
 
