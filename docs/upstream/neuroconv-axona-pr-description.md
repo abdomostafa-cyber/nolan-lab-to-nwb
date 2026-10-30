@@ -1,5 +1,7 @@
 # PR description for catalystneuro/neuroconv: Axona (for review, edit before use)
 
+> **Status:** opened 2026-10-30 as [catalystneuro/neuroconv#2159](https://github.com/catalystneuro/neuroconv/pull/2159); changelog entry renamed in a second commit (`b50dfcc`).
+
 > **Branch:** `fix/axona-get-metadata-after-remove-channels`, one commit (`f9d0e26`) on top of
 > `main` at `529e218`. Second of the six follow-ups from #2141, after AlphaOmega (#2152, merged).
 > **After opening:** rename `changelog_entries/PRNUMBER.bugfix.md` to `<PR number>.bugfix.md` in a
