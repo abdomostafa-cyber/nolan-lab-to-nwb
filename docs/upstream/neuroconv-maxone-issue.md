@@ -1,5 +1,7 @@
 # Issue for catalystneuro/neuroconv: MaxOne (for review, edit before use)
 
+> **Status:** posted 2026-10-30 as [catalystneuro/neuroconv#2170](https://github.com/catalystneuro/neuroconv/issues/2170), via the bug-report form.
+
 > **Route:** an issue, not a PR or a comment. The fix branch is ready, but its test would never
 > run (`TestMaxOneRecordingInterface` is `@pytest.mark.skip`ped and the interface is
 > `# pragma: no cover`), so the maintainer decides whether they want the PR. An issue records the bug
@@ -35,7 +37,7 @@ Would you like a PR for it anyway, or should it wait until the test class can ru
 
 **Body:**
 
-Closes #ISSUE. Follow-up to #2141, like #2152 and #2159. `MaxOneRecordingInterface.get_metadata` reads the Maxwell version
+Closes #2170. Follow-up to #2141, like #2152 and #2159. `MaxOneRecordingInterface.get_metadata` reads the Maxwell version
 through `recording_extractor.neo_reader`, so after `remove_channels` it raises
 `AttributeError: 'ChannelSliceRecording' object has no attribute 'neo_reader'`.
 
